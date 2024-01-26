@@ -41,32 +41,26 @@ try:
 
     # 認証オブジェクトを取得
     # logging_enable=True で HTTTP のログも出力デバックログを出力
-    #token_credential = DefaultAzureCredential(logging_enable=True)
+    token_credential = DefaultAzureCredential(logging_enable=True)
     # 取得するトークンのチェック
     # 明示的にトークンを取得 実行しなくてもblob_service_client.list_containers() など
     # 各 Azure リソース側のメソッドが自動的にトークンを呼び出し取得してくれる
     #access_token_raw = token_credential.get_token("https://management.azure.com//.default").token
     #print(jwt.decode(access_token_raw,options={"verify_signature": False}))
 
-    #key vault からシークレットを取得
-    KVUri = f"https://{os.getenv("key_vault_name")}.vault.azure.net"
-    credential = DefaultAzureCredential(logging_enable=True)
-    client = SecretClient(vault_url=KVUri, credential=credential,logging_enable=True,logging_body=True)
-    private_key = client.get_secret(os.getenv("key_vault_secret_name")).value
-    print(private_key)
+    # BlobServiceClient オブジェクトを作成
+    #logging_enable=Trueでデバックログも  logging_body=True で HTTP のログも出力
+    blob_service_client = BlobServiceClient(
+        account_url=os.getenv("blob_service_uri"),
+        credential=token_credential,
+        logging_body=True,
+        logging_enable=True)
+    # 全てのコンテナをリストし、それらをコンソールに出力
+    container_list = blob_service_client.list_containers()
+    #print("\nList of containers in the storage account:")
+    for container in container_list:
+        print(container.name)
 
-    # # BlobServiceClient オブジェクトを作成
-    # #logging_enable=Trueでデバックログも  logging_body=True で HTTP のログも出力
-    # blob_service_client = BlobServiceClient(
-    #     account_url="https://shmikimgdc.blob.core.windows.net",
-    #     credential=token_credential,
-    #     logging_body=True,
-    #     logging_enable=True)
-    # # 全てのコンテナをリストし、それらをコンソールに出力
-    # container_list = blob_service_client.list_containers()
-    # #print("\nList of containers in the storage account:")
-    # for container in container_list:
-    #     print(container.name)
 except (
     exceptions.ClientAuthenticationError,
     exceptions.HttpResponseError
